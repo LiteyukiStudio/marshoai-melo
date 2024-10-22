@@ -1,4 +1,4 @@
-from util import *
+from marshoai.util import *
 
 class MarshoContext:
     """
