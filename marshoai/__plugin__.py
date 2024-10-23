@@ -7,13 +7,15 @@ from melobot.protocols.onebot.v11.adapter.event import MessageEvent
 import traceback
 from azure.core.credentials import AzureKeyCredential
 from .constants import *
-from config import *
+from .config import Config 
 from .util import *
 from .models import MarshoContext
-model_name = marshoai_default_model
+
+config = Config()
+model_name = config.marshoai_default_model
 context = MarshoContext()
-token = marshoai_token
-endpoint = marshoai_azure_endpoint
+token = config.marshoai_token
+endpoint = config.marshoai_azure_endpoint
 client = ChatCompletionsClient(
     endpoint=endpoint,
     credential=AzureKeyCredential(token)
@@ -74,7 +76,6 @@ async def marsho(event: MessageEvent):
             await send_text(str(choice.message.content))
         except Exception as e:
             await send_text(str(e)+suggest_solution(str(e)))
-
             traceback.print_exc()
             return
 

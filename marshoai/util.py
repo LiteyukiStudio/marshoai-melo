@@ -8,7 +8,8 @@ from zhDateTime import DateTime
 from pathlib import Path
 from azure.ai.inference.aio import ChatCompletionsClient
 from azure.ai.inference.models import SystemMessage, UserMessage
-from config import *
+from .config import Config
+config = Config()
 async def get_image_b64(url):
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
@@ -104,7 +105,7 @@ def get_prompt():
     #     current_lunar_date = DateTime.now().to_lunar().date_hanzify()[5:] #库更新之前使用切片
     #     time_prompt = f"现在的时间是{current_time}，农历{current_lunar_date}。"
     #     prompts += time_prompt
-    marsho_prompt = marshoai_prompt
+    marsho_prompt = config.marshoai_prompt
     spell = SystemMessage(content=marsho_prompt+prompts).as_dict()
     return spell
 
