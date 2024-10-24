@@ -45,3 +45,6 @@ _✨ 使用 Azure OpenAI 推理服务的聊天机器人（施工中） ✨_
 
 发送`marsho`指令可以获取使用说明
 
+## © 版权说明
+"Marsho" logo 由 [@Asankilp](https://github.com/Asankilp) 绘制，基于 [CC BY-NC-SA 4.0](http://creativecommons.org/licenses/by-nc-sa/4.0/) 许可下提供。  
+"Melobot" logo 由 [@mldkouo](https://github.com/mldkouo) 绘制，版权归属于 [@Meloland](https://github.com/meloland)。

@@ -2,14 +2,16 @@ import traceback
 from azure.ai.inference.aio import ChatCompletionsClient
 from azure.ai.inference.models import UserMessage, TextContentItem, ImageContentItem, ImageUrl, CompletionsFinishReason
 from melobot import Plugin, send_text
-from melobot.protocols.onebot.v11 import on_start_match
+from melobot.protocols.onebot.v11 import on_start_match, on_message, on_command
+from melobot.protocols.onebot.v11.handle import Args
+from melobot.protocols.onebot.v11.utils import MsgChecker, LevelRole, MsgCheckerFactory, StartMatcher, ParseArgs
 from melobot.protocols.onebot.v11.adapter.event import MessageEvent
-import traceback
 from azure.core.credentials import AzureKeyCredential
 from .constants import *
 from .config import Config 
 from .util import *
 from .models import MarshoContext
+
 
 config = Config()
 model_name = config.marshoai_default_model
@@ -20,9 +22,17 @@ client = ChatCompletionsClient(
     endpoint=endpoint,
     credential=AzureKeyCredential(token)
         )
-@on_start_match(".sayhi")
-async def echo_hi() -> None:
-    await send_text("Hello, melobot!")
+checker_ft = MsgCheckerFactory(
+    owner= config.owner,
+    super_users=config.superusers
+)
+superuser_checker: MsgChecker = checker_ft.get_base(LevelRole.SU)
+
+@on_command(checker=superuser_checker, cmd_start="/", cmd_sep=" ", targets="changemodel")
+async def changemodel(args: ParseArgs = Args()):
+    global model_name
+    model_name = args.vals[0]
+    await send_text("已切换")
 
 @on_start_match("reset")
 async def reset(event: MessageEvent):
@@ -33,6 +43,7 @@ async def reset(event: MessageEvent):
 @on_start_match("marsho")
 async def marsho(event: MessageEvent):
         if event.text.lstrip("marsho") == "":
+            await send_text(USAGE)
             await send_text(INTRODUCTION)
             return
        # await UniMessage(str(text)).send()
@@ -80,5 +91,5 @@ async def marsho(event: MessageEvent):
             return
 
 class MarshoAI(Plugin):
-    version = "0.1"
-    flows = [echo_hi,marsho,reset]
+    version = VERSION
+    flows = [changemodel,marsho,reset]
