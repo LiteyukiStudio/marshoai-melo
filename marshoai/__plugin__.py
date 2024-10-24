@@ -45,6 +45,20 @@ async def reset(event: Union[GroupMessageEvent, PrivateMessageEvent]):
     context.reset(get_target_id(event), event.is_private)
     await send_text("上下文已重置")
 
+@on_start_match("nickname")
+async def nickname(event: MessageEvent):
+        nicknames = await get_nicknames()
+        user_id = str(event.sender.user_id)
+        name = event.text.lstrip("nickname ")
+        if not name:
+            await send_text("你的昵称为："+str(nicknames[user_id]))
+            return
+        if name == "reset":
+            await set_nickname(user_id, "")
+            await send_text("已重置昵称")
+        else:
+            await set_nickname(user_id, name)
+            await send_text("已设置昵称为："+name)
 
 @on_start_match("marsho")
 async def marsho(event: Union[GroupMessageEvent, PrivateMessageEvent]):
@@ -60,8 +74,15 @@ async def marsho_main(event: Union[GroupMessageEvent, PrivateMessageEvent], is_g
         try:
             is_support_image_model = model_name.lower() in SUPPORT_IMAGE_MODELS
             usermsg = [] if is_support_image_model else ""
-            user_id = event.sender.user_id
+            user_id = str(event.sender.user_id)
             target_id = get_target_id(event)
+            nicknames = await get_nicknames()
+            nickname = nicknames.get(user_id, "")
+            if nickname != "":
+                nickname_prompt = f"\n*此消息的说话者:{nickname}*"
+            else:
+                nickname_prompt = ""
+                await send_text("*你未设置自己的昵称。推荐使用'nickname [昵称]'命令设置昵称来获得个性化(可能）回答。")
             nickname_prompt = ""
             marsho_string_removed = False
             for i in event.get_segments("image"):
@@ -126,4 +147,4 @@ async def poke(event: PokeNotifyEvent, adapter: Adapter): # 尚未实现私聊�
 
 class MarshoAI(Plugin):
     version = VERSION
-    flows = [changemodel,marsho,reset,poke,contexts,praises]
+    flows = [changemodel,marsho,reset,poke,contexts,praises,nickname]
