@@ -46,7 +46,7 @@ _✨ 使用 Azure OpenAI 推理服务的聊天机器人（施工中） ✨_
 发送`marsho`指令可以获取使用说明
 
 #### 👉 戳一戳
-当 nonebot 连接到支持的 OneBot v11 实现端时，可以接收头像双击戳一戳消息并进行响应。详见`MARSHOAI_POKE_SUFFIX`配置项。
+当 melobot 连接到支持的 OneBot v11 实现端时，可以接收头像双击戳一戳消息并进行响应。详见`MARSHOAI_POKE_SUFFIX`配置项。
 ## ⚙️ 配置
 
 在 `bot.py` 所在目录的`.env`文件中添加下表中的配置
