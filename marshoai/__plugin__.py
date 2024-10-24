@@ -125,8 +125,9 @@ async def marsho_main(event: Union[GroupMessageEvent, PrivateMessageEvent], is_g
 @on_event(checker=PokeMarshoChecker())
 async def poke(event: PokeNotifyEvent, adapter: Adapter): # 尚未实现私聊戳一戳 QwQ
     #await adapter.send_custom(str(event.user_id),group_id=event.group_id)
-    user_id = event.user_id
-    target_id = get_target_id(event)
+    user_id = str(event.user_id)
+    nicknames = await get_nicknames()
+    nickname = nicknames.get(user_id, "")
     # nicknames = await get_nicknames()
     # nickname = nicknames.get(user_id, "")
     nickname = ""
