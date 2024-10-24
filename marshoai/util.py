@@ -47,7 +47,14 @@ def get_praises():
     if not os.path.exists(praises_file):
         init_data = {
             "like": [
-                    {"name":"Asankilp","advantages":"赋予了Marsho猫娘人格，使用vim与vscode为Marsho写了许多代码，使Marsho更加可爱"}
+                    {
+                        "name": "Asankilp",
+                        "advantages": "赋予了Marsho猫娘人格，使用vim与vscode为Marsho写了许多代码，使Marsho更加可爱"
+                    },
+                    {
+                        "name": "律回(aicorein,Melorenae)",
+                        "advantages": "创造了Melobot(同样是可爱的猫娘)，Marsho与她和Melobot亲密接触"
+                    }
                 ]
             }
         with open(praises_file,"w",encoding="utf-8") as f:
