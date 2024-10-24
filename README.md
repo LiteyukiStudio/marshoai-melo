@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/LiteyukiStudio/marshoai-melo/refs/heads/main/resources/logo.png" width="400" height="400" alt="Logo">
+  <img src="https://raw.githubusercontent.com/LiteyukiStudio/marshoai-melo/refs/heads/main/resources/logo-new.png" width="400" height="400" alt="Logo">
   <br>
 </div>
 
