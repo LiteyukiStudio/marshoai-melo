@@ -1,4 +1,4 @@
-__version__ = "0.1"
+__version__ = "0.3"
 VERSION = __version__
 USAGE: str = f"""MarshoAI-Melobot Beta v{__version__} by Asankilp
 用法：
