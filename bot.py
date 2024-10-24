@@ -22,5 +22,5 @@ if __name__ == "__main__":
         .add_io(ForwardWebSocketIO("ws://127.0.0.1:8081"))
         .add_adapter(Adapter())
         .load_plugin("./marshoai")
-        .run()
+        .run(debug=True)
     )

@@ -2,17 +2,18 @@ import traceback
 from azure.ai.inference.aio import ChatCompletionsClient
 from azure.ai.inference.models import UserMessage, TextContentItem, ImageContentItem, ImageUrl, CompletionsFinishReason
 from melobot import Plugin, send_text
-from melobot.protocols.onebot.v11 import on_start_match, on_message, on_command
+from melobot.protocols.onebot.v11 import on_start_match, on_message, on_command, on_notice, on_event, Adapter
 from melobot.protocols.onebot.v11.handle import Args
-from melobot.protocols.onebot.v11.utils import MsgChecker, LevelRole, MsgCheckerFactory, StartMatcher, ParseArgs
-from melobot.protocols.onebot.v11.adapter.event import MessageEvent
+from melobot.protocols.onebot.v11.utils import MsgChecker, LevelRole, MsgCheckerFactory, StartMatcher, ParseArgs, Parser
+from melobot.protocols.onebot.v11.adapter.event import MessageEvent, PokeNotifyEvent, GroupMessageEvent, PrivateMessageEvent
+from melobot.protocols.onebot.v11.adapter.segment import PokeSegment
 from azure.core.credentials import AzureKeyCredential
+from typing import Union
 from .constants import *
 from .config import Config 
 from .util import *
 from .models import MarshoContext
-
-
+from .checkers import superuser_checker, PokeMarshoChecker
 config = Config()
 model_name = config.marshoai_default_model
 context = MarshoContext()
@@ -22,11 +23,8 @@ client = ChatCompletionsClient(
     endpoint=endpoint,
     credential=AzureKeyCredential(token)
         )
-checker_ft = MsgCheckerFactory(
-    owner= config.owner,
-    super_users=config.superusers
-)
-superuser_checker: MsgChecker = checker_ft.get_base(LevelRole.SU)
+
+
 
 @on_command(checker=superuser_checker, cmd_start="/", cmd_sep=" ", targets="changemodel")
 async def changemodel(args: ParseArgs = Args()):
@@ -35,13 +33,25 @@ async def changemodel(args: ParseArgs = Args()):
     await send_text("已切换")
 
 @on_start_match("reset")
-async def reset(event: MessageEvent):
+async def reset_group(event: GroupMessageEvent):
+    context.reset(event.group_id, event.is_private)
+    await send_text("上下文已重置")
+
+@on_start_match("reset")
+async def reset_private(event: PrivateMessageEvent):
     context.reset(event.user_id, event.is_private)
     await send_text("上下文已重置")
 
 
 @on_start_match("marsho")
-async def marsho(event: MessageEvent):
+async def marsho_group(event: GroupMessageEvent):
+    await marsho_main(event, True)
+
+@on_start_match("marsho")
+async def marsho_private(event: PrivateMessageEvent):
+    await marsho_main(event, False)
+
+async def marsho_main(event: Union[GroupMessageEvent, PrivateMessageEvent], is_group: bool):
         if event.text.lstrip("marsho") == "":
             await send_text(USAGE)
             await send_text(INTRODUCTION)
@@ -51,6 +61,7 @@ async def marsho(event: MessageEvent):
             is_support_image_model = model_name.lower() in SUPPORT_IMAGE_MODELS
             usermsg = [] if is_support_image_model else ""
             user_id = event.sender.user_id
+            target_id = event.group_id if is_group else event.user_id
             nickname_prompt = ""
             marsho_string_removed = False
             for i in event.get_segments("image"):
@@ -76,11 +87,11 @@ async def marsho(event: MessageEvent):
             response = await make_chat(
                     client=client,
                     model_name=model_name,
-                    msg=context.build(event.user_id, event.is_private)+[UserMessage(content=usermsg)])
+                    msg=context.build(target_id, event.is_private)+[UserMessage(content=usermsg)])
             choice = response.choices[0]
             if choice["finish_reason"] == CompletionsFinishReason.STOPPED: # 当对话成功时，将dict的上下文添加到上下文类中
-                context.append(UserMessage(content=usermsg).as_dict(), event.user_id, event.is_private)
-                context.append(choice.message.as_dict(), event.user_id, event.is_private)
+                context.append(UserMessage(content=usermsg).as_dict(), target_id, event.is_private)
+                context.append(choice.message.as_dict(), target_id, event.is_private)
             elif choice["finish_reason"] == CompletionsFinishReason.CONTENT_FILTERED:
                 await send_text("*已被内容过滤器过滤。请调整聊天内容后重试。")
                 return
@@ -90,6 +101,28 @@ async def marsho(event: MessageEvent):
             traceback.print_exc()
             return
 
+@on_event(checker=PokeMarshoChecker())
+async def poke(event: PokeNotifyEvent, adapter: Adapter): # 尚未实现私聊戳一戳 QwQ
+    #await adapter.send_custom(str(event.user_id),group_id=event.group_id)
+    user_id = event.user_id
+    # nicknames = await get_nicknames()
+    # nickname = nicknames.get(user_id, "")
+    nickname = ""
+    try:
+        if config.marshoai_poke_suffix != "":
+            response = await make_chat(
+                    client=client,
+                    model_name=model_name,
+                    msg=[get_prompt(),UserMessage(content=f"*{nickname}{config.marshoai_poke_suffix}")]
+                )
+            choice = response.choices[0]
+            if choice["finish_reason"] == CompletionsFinishReason.STOPPED:
+                await adapter.send_custom(" "+str(choice.message.content),group_id=event.group_id)
+    except Exception as e:
+        await adapter.send_custom(str(e)+suggest_solution(str(e)),group_id=event.group_id)
+        traceback.print_exc()
+        return
+
 class MarshoAI(Plugin):
     version = VERSION
-    flows = [changemodel,marsho,reset]
+    flows = [changemodel,marsho_group,marsho_private,reset_group,reset_private,poke]

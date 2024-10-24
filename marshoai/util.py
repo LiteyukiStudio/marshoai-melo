@@ -33,10 +33,10 @@ async def get_image_b64(url):
 async def make_chat(client: ChatCompletionsClient, msg, model_name: str):
    return await client.complete(
            messages=msg,
-           model=model_name
-        #    temperature=config.marshoai_temperature,
-        #    max_tokens=config.marshoai_max_tokens,
-        #    top_p=config.marshoai_top_p
+           model=model_name,
+           temperature=config.marshoai_temperature,
+           max_tokens=config.marshoai_max_tokens,
+           top_p=config.marshoai_top_p
                 )
 # def get_praises():
 #     praises_file = store.get_plugin_data_file("praises.json") # 夸赞名单文件使用localstore存储
@@ -96,15 +96,15 @@ async def make_chat(client: ChatCompletionsClient, msg, model_name: str):
 
 def get_prompt():
     prompts = ""
-    # prompts += config.marshoai_additional_prompt
+    prompts += config.marshoai_additional_prompt
     # if config.marshoai_enable_praises:
     #     praises_prompt = build_praises()
     #     prompts += praises_prompt
-    # if config.marshoai_enable_time_prompt:
-    #     current_time = datetime.now().strftime('%Y.%m.%d %H:%M:%S')
-    #     current_lunar_date = DateTime.now().to_lunar().date_hanzify()[5:] #库更新之前使用切片
-    #     time_prompt = f"现在的时间是{current_time}，农历{current_lunar_date}。"
-    #     prompts += time_prompt
+    if config.marshoai_enable_time_prompt:
+        current_time = datetime.now().strftime('%Y.%m.%d %H:%M:%S')
+        current_lunar_date = DateTime.now().to_lunar().date_hanzify()[5:] #库更新之前使用切片
+        time_prompt = f"现在的时间是{current_time}，农历{current_lunar_date}。"
+        prompts += time_prompt
     marsho_prompt = config.marshoai_prompt
     spell = SystemMessage(content=marsho_prompt+prompts).as_dict()
     return spell

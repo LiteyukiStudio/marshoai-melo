@@ -45,6 +45,26 @@ _✨ 使用 Azure OpenAI 推理服务的聊天机器人（施工中） ✨_
 
 发送`marsho`指令可以获取使用说明
 
+#### 👉 戳一戳
+当 nonebot 连接到支持的 OneBot v11 实现端时，可以接收头像双击戳一戳消息并进行响应。详见`MARSHOAI_POKE_SUFFIX`配置项。
+## ⚙️ 配置
+
+在 `bot.py` 所在目录的`.env`文件中添加下表中的配置
+
+|      配置项       | 必填 | 默认值 |                             说明                             |
+| :---------------: | :--: | :----: | :----------------------------------------------------------: |
+| MARSHOAI_TOKEN |  是  |   无    | 调用 API 必需的访问 token |
+| MARSHOAI_DEFAULT_MODEL | 否 | `gpt-4o-mini` | Marsho 默认调用的模型 |
+| MARSHOAI_PROMPT | 否 | 猫娘 Marsho 人设提示词 | Marsho 的基本系统提示词 |
+| MARSHOAI_ADDITIONAL_PROMPT | 否 | 无 | Marsho 的扩展系统提示词 |
+| MARSHOAI_POKE_SUFFIX | 否 | `揉了揉你的猫耳` | 对 Marsho 所连接的 OneBot 用户进行双击戳一戳时，构建的聊天内容。此配置项为空字符串时，戳一戳响应功能会被禁用。例如，默认值构建的聊天内容将为`*[昵称]揉了揉你的猫耳`。 |
+| MARSHOAI_ENABLE_PRAISES | 否 | `true` | 是否启用夸赞名单功能（未实现） |
+| MARSHOAI_ENABLE_TIME_PROMPT | 否 | `true` | 是否启用实时更新的日期与时间（精确到秒）与农历日期系统提示词 |
+| MARSHOAI_AZURE_ENDPOINT | 否 | `https://models.inference.ai.azure.com` | 调用 Azure OpenAI 服务的 API 终结点 |
+| MARSHOAI_TEMPERATURE | 否 | 无 | 进行推理时的温度参数 |
+| MARSHOAI_TOP_P | 否 | 无 | 进行推理时的核采样参数 |
+| MARSHOAI_MAX_TOKENS | 否 | 无 | 返回消息的最大 token 数 |
+
 ## © 版权说明
 "Marsho" logo 由 [@Asankilp](https://github.com/Asankilp) 绘制，基于 [CC BY-NC-SA 4.0](http://creativecommons.org/licenses/by-nc-sa/4.0/) 许可下提供。  
 "Melobot" logo 由 [@mldkouo](https://github.com/mldkouo) 绘制，版权归属于 [@Meloland](https://github.com/meloland)。
