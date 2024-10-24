@@ -14,7 +14,9 @@ from .config import Config
 from .util import *
 from .models import MarshoContext
 from .checkers import superuser_checker, PokeMarshoChecker
+from .localstore import PluginStore
 config = Config()
+store = PluginStore(PLUGIN_NAME)
 model_name = config.marshoai_default_model
 context = MarshoContext()
 token = config.marshoai_token
@@ -24,7 +26,9 @@ client = ChatCompletionsClient(
     credential=AzureKeyCredential(token)
         )
 
-
+@on_command(checker=superuser_checker, cmd_start="/", cmd_sep=" ", targets="praises")
+async def praises():
+    await send_text(build_praises())
 
 @on_command(checker=superuser_checker, cmd_start="/", cmd_sep=" ", targets="changemodel")
 async def changemodel(args: ParseArgs = Args()):
@@ -34,17 +38,11 @@ async def changemodel(args: ParseArgs = Args()):
 
 @on_command(checker=superuser_checker, cmd_start="/", cmd_sep=" ", targets="contexts")
 async def contexts(event: Union[GroupMessageEvent, PrivateMessageEvent]):
-    try:
-        await send_text(str(context.build(event.group_id, event.is_private)[1:]))
-    except AttributeError:
-        await send_text(str(context.build(event.user_id, event.is_private)[1:]))
+    await send_text(str(context.build(get_target_id(event), event.is_private)[1:]))
 
 @on_start_match("reset")
 async def reset(event: Union[GroupMessageEvent, PrivateMessageEvent]):
-    try:
-        context.reset(event.group_id, event.is_private)
-    except AttributeError:
-        context.reset(event.user_id, event.is_private)
+    context.reset(get_target_id(event), event.is_private)
     await send_text("上下文已重置")
 
 
@@ -56,16 +54,14 @@ async def marsho_main(event: Union[GroupMessageEvent, PrivateMessageEvent], is_g
         if event.text.lstrip("marsho") == "":
             await send_text(USAGE)
             await send_text(INTRODUCTION)
+            await send_text(str(store.get_plugin_data_dir()))
             return
        # await UniMessage(str(text)).send()
         try:
             is_support_image_model = model_name.lower() in SUPPORT_IMAGE_MODELS
             usermsg = [] if is_support_image_model else ""
             user_id = event.sender.user_id
-            try:
-                target_id = event.group_id
-            except AttributeError:
-                target_id = event.user_id
+            target_id = get_target_id(event)
             nickname_prompt = ""
             marsho_string_removed = False
             for i in event.get_segments("image"):
@@ -109,6 +105,7 @@ async def marsho_main(event: Union[GroupMessageEvent, PrivateMessageEvent], is_g
 async def poke(event: PokeNotifyEvent, adapter: Adapter): # 尚未实现私聊戳一戳 QwQ
     #await adapter.send_custom(str(event.user_id),group_id=event.group_id)
     user_id = event.user_id
+    target_id = get_target_id(event)
     # nicknames = await get_nicknames()
     # nickname = nicknames.get(user_id, "")
     nickname = ""
@@ -129,4 +126,4 @@ async def poke(event: PokeNotifyEvent, adapter: Adapter): # 尚未实现私聊�
 
 class MarshoAI(Plugin):
     version = VERSION
-    flows = [changemodel,marsho,reset,poke,contexts]
+    flows = [changemodel,marsho,reset,poke,contexts,praises]

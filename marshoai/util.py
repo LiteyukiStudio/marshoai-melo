@@ -5,11 +5,15 @@ import json
 import httpx
 from datetime import datetime
 from zhDateTime import DateTime
-from pathlib import Path
+from .localstore import PluginStore
+from typing import Union
 from azure.ai.inference.aio import ChatCompletionsClient
 from azure.ai.inference.models import SystemMessage, UserMessage
+from melobot.protocols.onebot.v11.adapter.event import GroupMessageEvent, PrivateMessageEvent
 from .config import Config
+from .constants import PLUGIN_NAME
 config = Config()
+store = PluginStore(PLUGIN_NAME)
 async def get_image_b64(url):
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
@@ -38,68 +42,74 @@ async def make_chat(client: ChatCompletionsClient, msg, model_name: str):
            max_tokens=config.marshoai_max_tokens,
            top_p=config.marshoai_top_p
                 )
-# def get_praises():
-#     praises_file = store.get_plugin_data_file("praises.json") # 夸赞名单文件使用localstore存储
-#     if not os.path.exists(praises_file):
-#         init_data = {
-#             "like": [
-#                     {"name":"Asankilp","advantages":"赋予了Marsho猫娘人格，使用vim与vscode为Marsho写了许多代码，使Marsho更加可爱"}
-#                 ]
-#             }
-#         with open(praises_file,"w",encoding="utf-8") as f:
-#             json.dump(init_data,f,ensure_ascii=False,indent=4)
-#     with open(praises_file,"r",encoding="utf-8") as f:
-#         data = json.load(f)
-#     return data
+def get_praises():
+    praises_file = store.get_plugin_data_file("praises.json") # 夸赞名单文件使用localstore存储
+    if not os.path.exists(praises_file):
+        init_data = {
+            "like": [
+                    {"name":"Asankilp","advantages":"赋予了Marsho猫娘人格，使用vim与vscode为Marsho写了许多代码，使Marsho更加可爱"}
+                ]
+            }
+        with open(praises_file,"w",encoding="utf-8") as f:
+            json.dump(init_data,f,ensure_ascii=False,indent=4)
+    with open(praises_file,"r",encoding="utf-8") as f:
+        data = json.load(f)
+    return data
 
-# def build_praises():
-#     praises = get_praises()
-#     result = ["你喜欢以下几个人物，他们有各自的优点："]
-#     for item in praises["like"]:
-#         result.append(f"名字：{item['name']}，优点：{item['advantages']}")
-#     return "\n".join(result)
+def build_praises():
+    praises = get_praises()
+    result = ["你喜欢以下几个人物，他们有各自的优点："]
+    for item in praises["like"]:
+        result.append(f"名字：{item['name']}，优点：{item['advantages']}")
+    return "\n".join(result)
 
-# async def save_context_to_json(name: str, context: str):
-#     context_dir = store.get_plugin_data_dir() / "contexts"
-#     os.makedirs(context_dir, exist_ok=True)
-#     file_path = os.path.join(context_dir, f"{name}.json")
-#     with open(file_path, 'w', encoding='utf-8') as json_file:
-#         json.dump(context, json_file, ensure_ascii=False, indent=4)
+async def save_context_to_json(name: str, context: str):
+    context_dir = store.get_plugin_data_dir() / "contexts"
+    os.makedirs(context_dir, exist_ok=True)
+    file_path = os.path.join(context_dir, f"{name}.json")
+    with open(file_path, 'w', encoding='utf-8') as json_file:
+        json.dump(context, json_file, ensure_ascii=False, indent=4)
 
-# async def load_context_from_json(name: str):
-#     context_dir = store.get_plugin_data_dir() / "contexts"
-#     os.makedirs(context_dir, exist_ok=True)
-#     file_path = os.path.join(context_dir, f"{name}.json")
-#     try:
-#         with open(file_path, 'r', encoding='utf-8') as json_file:
-#             return json.load(json_file)
-#     except FileNotFoundError:
-#         return []
-# async def set_nickname(user_id: str, name: str):
-#     filename = store.get_plugin_data_file("nickname.json")
-#     if not os.path.exists(filename):
-#         data = {}
-#     else:
-#         with open(filename,'r') as f:
-#             data = json.load(f)
-#     data[user_id] = name
-#     with open(filename, 'w') as f:
-#         json.dump(data, f, ensure_ascii=False, indent=4)
+async def load_context_from_json(name: str):
+    context_dir = store.get_plugin_data_dir() / "contexts"
+    os.makedirs(context_dir, exist_ok=True)
+    file_path = os.path.join(context_dir, f"{name}.json")
+    try:
+        with open(file_path, 'r', encoding='utf-8') as json_file:
+            return json.load(json_file)
+    except FileNotFoundError:
+        return []
+async def set_nickname(user_id: str, name: str):
+    filename = store.get_plugin_data_file("nickname.json")
+    if not os.path.exists(filename):
+        data = {}
+    else:
+        with open(filename,'r') as f:
+            data = json.load(f)
+    data[user_id] = name
+    with open(filename, 'w') as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
 
-# async def get_nicknames():
-#     filename = store.get_plugin_data_file("nickname.json")
-#     try:
-#         with open(filename, 'r', encoding='utf-8') as f:
-#             return json.load(f)
-#     except FileNotFoundError:
-#         return {}
+async def get_nicknames():
+    filename = store.get_plugin_data_file("nickname.json")
+    try:
+        with open(filename, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {}
+
+def get_target_id(event: Union[GroupMessageEvent, PrivateMessageEvent]):
+    try:
+        return event.group_id
+    except AttributeError:
+        return event.user_id
 
 def get_prompt():
     prompts = ""
     prompts += config.marshoai_additional_prompt
-    # if config.marshoai_enable_praises:
-    #     praises_prompt = build_praises()
-    #     prompts += praises_prompt
+    if config.marshoai_enable_praises:
+        praises_prompt = build_praises()
+        prompts += praises_prompt
     if config.marshoai_enable_time_prompt:
         current_time = datetime.now().strftime('%Y.%m.%d %H:%M:%S')
         current_lunar_date = DateTime.now().to_lunar().date_hanzify()[5:] #库更新之前使用切片

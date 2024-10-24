@@ -54,6 +54,6 @@ class Config:
         if name in self.config_items:
             value = os.getenv(name.upper())
             return self._convert_string(value) if value is not None else self.config_items[name]
-
-        raise AttributeError(f"'Config' object has no attribute '{name}'")
+        else:
+            return None
 

@@ -1,5 +1,6 @@
-__version__ = "0.3.1"
+__version__ = "0.3.1.1"
 VERSION = __version__
+PLUGIN_NAME = "marshoai"
 USAGE: str = f"""MarshoAI-Melobot Beta v{__version__} by Asankilp
 用法：
   marsho <聊天内容> : 与 Marsho 进行对话。当模型为 GPT-4o(-mini) 等时，可以带上图片进行对话。
@@ -7,6 +8,8 @@ USAGE: str = f"""MarshoAI-Melobot Beta v{__version__} by Asankilp
 超级用户命令(均需要加上命令前缀使用):
   /changemodel <模型名> : 切换全局 AI 模型。
   /contexts : 返回当前会话的上下文列表。 ※当上下文包含图片时，不要使用此命令。
+  /praises : 返回夸赞名单的提示词。
+
 
 ※本AI的回答"按原样"提供，不提供任何担保。AI也会犯错，请仔细甄别回答的准确性。"""
 
