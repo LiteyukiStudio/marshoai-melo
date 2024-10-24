@@ -32,24 +32,25 @@ async def changemodel(args: ParseArgs = Args()):
     model_name = args.vals[0]
     await send_text("已切换")
 
-@on_start_match("reset")
-async def reset_group(event: GroupMessageEvent):
-    context.reset(event.group_id, event.is_private)
-    await send_text("上下文已重置")
+@on_command(checker=superuser_checker, cmd_start="/", cmd_sep=" ", targets="contexts")
+async def contexts(event: Union[GroupMessageEvent, PrivateMessageEvent]):
+    try:
+        await send_text(str(context.build(event.group_id, event.is_private)[1:]))
+    except AttributeError:
+        await send_text(str(context.build(event.user_id, event.is_private)[1:]))
 
 @on_start_match("reset")
-async def reset_private(event: PrivateMessageEvent):
-    context.reset(event.user_id, event.is_private)
-    await send_text("上下文已重置")
+async def reset(event: Union[GroupMessageEvent, PrivateMessageEvent]):
+    try:
+        context.reset(event.group_id, event.is_private)
+    except AttributeError:
+        context.reset(event.user_id, event.is_private)
+        await send_text("上下文已重置")
 
 
 @on_start_match("marsho")
-async def marsho_group(event: GroupMessageEvent):
-    await marsho_main(event, True)
-
-@on_start_match("marsho")
-async def marsho_private(event: PrivateMessageEvent):
-    await marsho_main(event, False)
+async def marsho(event: Union[GroupMessageEvent, PrivateMessageEvent]):
+    await marsho_main(event, event.is_group)
 
 async def marsho_main(event: Union[GroupMessageEvent, PrivateMessageEvent], is_group: bool):
         if event.text.lstrip("marsho") == "":
@@ -61,7 +62,10 @@ async def marsho_main(event: Union[GroupMessageEvent, PrivateMessageEvent], is_g
             is_support_image_model = model_name.lower() in SUPPORT_IMAGE_MODELS
             usermsg = [] if is_support_image_model else ""
             user_id = event.sender.user_id
-            target_id = event.group_id if is_group else event.user_id
+            try:
+                target_id = event.group_id
+            except AttributeError:
+                target_id = event.user_id
             nickname_prompt = ""
             marsho_string_removed = False
             for i in event.get_segments("image"):
@@ -125,4 +129,4 @@ async def poke(event: PokeNotifyEvent, adapter: Adapter): # 尚未实现私聊�
 
 class MarshoAI(Plugin):
     version = VERSION
-    flows = [changemodel,marsho_group,marsho_private,reset_group,reset_private,poke]
+    flows = [changemodel,marsho,reset,poke,contexts]
