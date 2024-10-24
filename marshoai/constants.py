@@ -6,6 +6,8 @@ USAGE: str = f"""MarshoAI-Melobot Beta v{__version__} by Asankilp
   reset : 重置当前会话的上下文。
 超级用户命令(均需要加上命令前缀使用):
   /changemodel <模型名> : 切换全局 AI 模型。
+  /contexts : 返回当前会话的上下文列表。 ※当上下文包含图片时，不要使用此命令。
+
 ※本AI的回答"按原样"提供，不提供任何担保。AI也会犯错，请仔细甄别回答的准确性。"""
 
 SUPPORT_IMAGE_MODELS: list = ["gpt-4o","gpt-4o-mini","llama-3.2-90b-vision-instruct","llama-3.2-11b-vision-instruct"]

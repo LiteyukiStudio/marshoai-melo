@@ -45,7 +45,7 @@ async def reset(event: Union[GroupMessageEvent, PrivateMessageEvent]):
         context.reset(event.group_id, event.is_private)
     except AttributeError:
         context.reset(event.user_id, event.is_private)
-        await send_text("上下文已重置")
+    await send_text("上下文已重置")
 
 
 @on_start_match("marsho")
