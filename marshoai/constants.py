@@ -1,4 +1,4 @@
-__version__ = "0.3.4"
+__version__ = "0.3.4.1"
 VERSION = __version__
 PLUGIN_NAME = "marshoai"
 USAGE: str = f"""MarshoAI-Melobot Beta v{__version__} by Asankilp

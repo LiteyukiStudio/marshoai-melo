@@ -114,7 +114,6 @@ async def marsho_main(event: Union[GroupMessageEvent, PrivateMessageEvent], is_g
             else:
                 nickname_prompt = ""
                 await send_text("*你未设置自己的昵称。推荐使用'nickname [昵称]'命令设置昵称来获得个性化(可能）回答。")
-            nickname_prompt = ""
             marsho_string_removed = False
             for i in event.get_segments("image"):
                 if is_support_image_model:
