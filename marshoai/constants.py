@@ -1,4 +1,4 @@
-__version__ = "0.3.2"
+__version__ = "0.3.4"
 VERSION = __version__
 PLUGIN_NAME = "marshoai"
 USAGE: str = f"""MarshoAI-Melobot Beta v{__version__} by Asankilp
@@ -10,6 +10,10 @@ USAGE: str = f"""MarshoAI-Melobot Beta v{__version__} by Asankilp
   /changemodel <模型名> : 切换全局 AI 模型。
   /contexts : 返回当前会话的上下文列表。 ※当上下文包含图片时，不要使用此命令。
   /praises : 返回夸赞名单的提示词。
+  /usermsg <消息> : 往当前会话添加用户消息(UserMessage)。
+  /assistantmsg <消息> : 往当前会话添加助手消息(AssistantMessage)。
+  /savecontext <文件名> : 保存当前会话的上下文至插件数据目录下的contexts/<文件名>.json里。
+  /loadcontext <文件名> : 从插件数据目录下的contexts/<文件名>.json里读取上下文并覆盖到当前会话。
 ※本AI的回答"按原样"提供，不提供任何担保。AI也会犯错，请仔细甄别回答的准确性。"""
 
 SUPPORT_IMAGE_MODELS: list = ["gpt-4o","gpt-4o-mini","llama-3.2-90b-vision-instruct","llama-3.2-11b-vision-instruct"]

@@ -47,6 +47,27 @@ _✨ 使用 Azure OpenAI 推理服务的聊天机器人（施工中） ✨_
 
 #### 👉 戳一戳
 当 melobot 连接到支持的 OneBot v11 实现端时，可以接收头像双击戳一戳消息并进行响应。详见`MARSHOAI_POKE_SUFFIX`配置项。
+
+## 👍 夸赞名单
+夸赞名单存储于插件数据目录下的`praises.json`里（该目录路径会在 Bot 启动时输出到日志），当配置项为`true`时发起一次聊天后自动生成，包含人物名字与人物优点两个基本数据。  
+存储于其中的人物会被 Marsho “认识”和“喜欢”。  
+其结构类似于：
+```json
+{
+	"like": [
+		{
+			"name": "Asankilp",
+			"advantages": "赋予了Marsho猫娘人格，使用vim与vscode为Marsho写了许多代码，使Marsho更加可爱"
+		},
+		{
+			"name": "律回(aicorein,Melorenae)",
+			"advantages": "创造了Melobot(同样是可爱的猫娘)，Marsho与她和Melobot亲密接触"
+		},
+		...
+	]
+}
+```
+
 ## ⚙️ 配置
 
 在 `bot.py` 所在目录的`.env`文件中添加下表中的配置

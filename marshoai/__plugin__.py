@@ -1,7 +1,8 @@
 import traceback
 from azure.ai.inference.aio import ChatCompletionsClient
-from azure.ai.inference.models import UserMessage, TextContentItem, ImageContentItem, ImageUrl, CompletionsFinishReason
+from azure.ai.inference.models import UserMessage, AssistantMessage, TextContentItem, ImageContentItem, ImageUrl, CompletionsFinishReason
 from melobot import Plugin, send_text
+from melobot.log import get_logger
 from melobot.protocols.onebot.v11 import on_start_match, on_message, on_command, on_notice, on_event, Adapter
 from melobot.protocols.onebot.v11.handle import Args
 from melobot.protocols.onebot.v11.utils import MsgChecker, LevelRole, MsgCheckerFactory, StartMatcher, ParseArgs, Parser
@@ -25,10 +26,40 @@ client = ChatCompletionsClient(
     endpoint=endpoint,
     credential=AzureKeyCredential(token)
         )
+logger = get_logger()
+
+logger.info(f"Marsho 的插件数据存储于 : {str(store.get_plugin_data_dir())} 哦~🐾")
+if config.marshoai_token == "":
+    logger.warning("token 未配置。可能无法进行聊天。")
+else:
+    logger.info("token 已配置~！🐾")
+logger.info("マルショは、高性能ですから!")
+
+@on_command(checker=superuser_checker, cmd_start="/", cmd_sep=" ", targets="usermsg")
+async def add_usermsg(event: MessageEvent, args: ParseArgs = Args()):
+    context.append(UserMessage(content=" ".join(args.vals)).as_dict(), get_target_id(event), event.is_private)
+    await send_text("已添加用户消息")
+
+@on_command(checker=superuser_checker, cmd_start="/", cmd_sep=" ", targets="assistantmsg")
+async def add_assistantmsg(event: MessageEvent, args: ParseArgs = Args()):
+    context.append(AssistantMessage(content=" ".join(args.vals)).as_dict(), get_target_id(event), event.is_private)
+    await send_text("已添加助手消息")
 
 @on_command(checker=superuser_checker, cmd_start="/", cmd_sep=" ", targets="praises")
 async def praises():
     await send_text(build_praises())
+
+@on_command(checker=superuser_checker, cmd_start="/", cmd_sep=" ", targets="savecontext")
+async def save_context(event: MessageEvent, args: ParseArgs = Args()):
+    contexts = context.build(get_target_id(event), event.is_private)[1:]
+    await save_context_to_json(" ".join(args.vals), contexts)
+    await send_text("已保存上下文")
+
+@on_command(checker=superuser_checker, cmd_start="/", cmd_sep=" ", targets="loadcontext")
+async def load_context(event: MessageEvent, args: ParseArgs = Args()):
+    context.set_context(await load_context_from_json(" ".join(args.vals)), get_target_id(event), event.is_private)
+    await send_text("已加载并覆盖上下文")
+
 
 @on_command(checker=superuser_checker, cmd_start="/", cmd_sep=" ", targets="changemodel")
 async def changemodel(args: ParseArgs = Args()):
@@ -66,7 +97,7 @@ async def marsho(event: Union[GroupMessageEvent, PrivateMessageEvent]):
 
 async def marsho_main(event: Union[GroupMessageEvent, PrivateMessageEvent], is_group: bool):
         if event.text.lstrip("marsho") == "":
-            await send_text(USAGE)
+            await send_text(USAGE+"\n当前使用的模型："+model_name)
             await send_text(INTRODUCTION)
             await send_text(str(store.get_plugin_data_dir()))
             return
@@ -148,4 +179,4 @@ async def poke(event: PokeNotifyEvent, adapter: Adapter): # 尚未实现私聊�
 
 class MarshoAI(Plugin):
     version = VERSION
-    flows = [changemodel,marsho,reset,poke,contexts,praises,nickname]
+    flows = [changemodel,marsho,reset,poke,contexts,praises,nickname,add_assistantmsg,add_usermsg,load_context,save_context]
