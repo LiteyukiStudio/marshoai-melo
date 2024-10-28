@@ -16,6 +16,7 @@ from .util import *
 from .models import MarshoContext
 from .checkers import superuser_checker, PokeMarshoChecker
 from .localstore import PluginStore
+import asyncio
 config = Config()
 store = PluginStore(PLUGIN_NAME)
 model_name = config.marshoai_default_model
@@ -27,6 +28,7 @@ client = ChatCompletionsClient(
     credential=AzureKeyCredential(token)
         )
 logger = get_logger()
+lock = asyncio.Lock()
 
 logger.info(f"Marsho 的插件数据存储于 : {str(store.get_plugin_data_dir())} 哦~🐾")
 if config.marshoai_token == "":
@@ -78,9 +80,11 @@ async def reset(event: Union[GroupMessageEvent, PrivateMessageEvent]):
 
 @on_start_match("nickname")
 async def nickname(event: MessageEvent):
+    async with lock:
         nicknames = await get_nicknames()
         user_id = str(event.sender.user_id)
-        name = event.text.lstrip("nickname ")
+        name = event.text.split()[1]
+       # print(user_id, name)
         if not name:
             await send_text("你的昵称为："+str(nicknames[user_id]))
             return
@@ -96,10 +100,10 @@ async def marsho(event: Union[GroupMessageEvent, PrivateMessageEvent]):
     await marsho_main(event, event.is_group)
 
 async def marsho_main(event: Union[GroupMessageEvent, PrivateMessageEvent], is_group: bool):
-        if event.text.lstrip("marsho") == "":
+        if len(event.text.split()) == 1:
             await send_text(USAGE+"\n当前使用的模型："+model_name)
             await send_text(INTRODUCTION)
-            await send_text(str(store.get_plugin_data_dir()))
+           # await send_text(str(store.get_plugin_data_dir()))
             return
        # await UniMessage(str(text)).send()
         try:
@@ -127,7 +131,7 @@ async def marsho_main(event: Union[GroupMessageEvent, PrivateMessageEvent], is_g
             for i in event.get_segments("text"):
                 if not marsho_string_removed:
                     # 去掉最前面的"marsho "字符串
-                    clean_text = i.data["text"].lstrip("marsho ")
+                    clean_text = "".join(i.data["text"].split()[1:])
                     marsho_string_removed = True  # 标记文本已处理
                 else:
                     clean_text = i.data["text"]
