@@ -1,6 +1,10 @@
 from melobot.protocols.onebot.v11.adapter.event import Event, MessageEvent, PokeNotifyEvent
-from melobot.protocols.onebot.v11.utils import MsgChecker, LevelRole, MsgCheckerFactory, StartMatcher, ParseArgs, Checker
+from melobot.protocols.onebot.v11.utils import MsgChecker, LevelRole, MsgCheckerFactory
 from melobot.protocols.onebot.v11.adapter.segment import PokeRecvSegment
+
+from melobot.utils.parse import CmdArgs
+from melobot.utils.match import StartMatcher
+from melobot.utils.check import Checker
 
 from .config import Config
 from .extra_segment import TouchSegment

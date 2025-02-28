@@ -1,11 +1,14 @@
 import traceback
 from azure.ai.inference.aio import ChatCompletionsClient
 from azure.ai.inference.models import UserMessage, AssistantMessage, TextContentItem, ImageContentItem, ImageUrl, CompletionsFinishReason
-from melobot import Plugin, send_text
+from melobot import send_text
+from melobot.handle import on_start_match, on_command
 from melobot.log import get_logger
-from melobot.protocols.onebot.v11 import on_start_match, on_message, on_command, on_notice, on_event, Adapter
-from melobot.protocols.onebot.v11.handle import Args
-from melobot.protocols.onebot.v11.utils import MsgChecker, LevelRole, MsgCheckerFactory, StartMatcher, ParseArgs, Parser
+from melobot.plugin import PluginPlanner
+from melobot.protocols.onebot.v11 import on_message, on_notice, on_event, Adapter
+from melobot.utils.match import StartMatcher
+from melobot.utils.parse import Parser, CmdArgs
+from melobot.protocols.onebot.v11.utils import MsgChecker, LevelRole, MsgCheckerFactory
 from melobot.protocols.onebot.v11.adapter.event import MessageEvent, PokeNotifyEvent, GroupMessageEvent, PrivateMessageEvent
 from melobot.protocols.onebot.v11.adapter.segment import PokeSegment
 from azure.core.credentials import AzureKeyCredential
@@ -38,12 +41,12 @@ else:
 logger.info("マルショは、高性能ですから!")
 
 @on_command(checker=superuser_checker, cmd_start="/", cmd_sep=" ", targets="usermsg")
-async def add_usermsg(event: MessageEvent, args: ParseArgs = Args()):
+async def add_usermsg(event: MessageEvent, args: CmdArgs):
     context.append(UserMessage(content=" ".join(args.vals)).as_dict(), get_target_id(event), event.is_private)
     await send_text("已添加用户消息")
 
 @on_command(checker=superuser_checker, cmd_start="/", cmd_sep=" ", targets="assistantmsg")
-async def add_assistantmsg(event: MessageEvent, args: ParseArgs = Args()):
+async def add_assistantmsg(event: MessageEvent, args: CmdArgs):
     context.append(AssistantMessage(content=" ".join(args.vals)).as_dict(), get_target_id(event), event.is_private)
     await send_text("已添加助手消息")
 
@@ -52,19 +55,19 @@ async def praises():
     await send_text(build_praises())
 
 @on_command(checker=superuser_checker, cmd_start="/", cmd_sep=" ", targets="savecontext")
-async def save_context(event: MessageEvent, args: ParseArgs = Args()):
+async def save_context(event: MessageEvent, args: CmdArgs):
     contexts = context.build(get_target_id(event), event.is_private)[1:]
     await save_context_to_json(" ".join(args.vals), contexts)
     await send_text("已保存上下文")
 
 @on_command(checker=superuser_checker, cmd_start="/", cmd_sep=" ", targets="loadcontext")
-async def load_context(event: MessageEvent, args: ParseArgs = Args()):
+async def load_context(event: MessageEvent, args: CmdArgs):
     context.set_context(await load_context_from_json(" ".join(args.vals)), get_target_id(event), event.is_private)
     await send_text("已加载并覆盖上下文")
 
 
 @on_command(checker=superuser_checker, cmd_start="/", cmd_sep=" ", targets="changemodel")
-async def changemodel(args: ParseArgs = Args()):
+async def changemodel(args: CmdArgs):
     global model_name
     model_name = args.vals[0]
     await send_text("已切换")
@@ -179,7 +182,12 @@ async def poke(event: PokeNotifyEvent, adapter: Adapter): # 尚未实现私聊�
         await adapter.send_custom(str(e)+suggest_solution(str(e)),group_id=event.group_id)
         traceback.print_exc()
         return
+    
+Plugin = PluginPlanner(version = VERSION,
+    flows = [changemodel,marsho,reset,poke,contexts,praises,nickname,add_assistantmsg,add_usermsg,load_context,save_context])
 
+"""
 class MarshoAI(Plugin):
     version = VERSION
     flows = [changemodel,marsho,reset,poke,contexts,praises,nickname,add_assistantmsg,add_usermsg,load_context,save_context]
+"""
