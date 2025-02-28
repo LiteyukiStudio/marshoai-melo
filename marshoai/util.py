@@ -14,6 +14,12 @@ from .config import Config
 from .constants import PLUGIN_NAME
 config = Config()
 store = PluginStore(PLUGIN_NAME)
+
+# 时间参数相关
+if config.marshoai_enable_time_prompt:
+    _weekdays = ["星期一", "星期二", "星期三", "星期四", "星期五", "星期六", "星期日"]
+    _time_prompt = "现在的时间是{date_time}{weekday_name}，{lunar_date}。"
+
 async def get_image_b64(url):
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
@@ -118,10 +124,15 @@ def get_prompt():
         praises_prompt = build_praises()
         prompts += praises_prompt
     if config.marshoai_enable_time_prompt:
-        current_time = datetime.now().strftime('%Y.%m.%d %H:%M:%S')
-        current_lunar_date = DateTime.now().to_lunar().date_hanzify()[5:] #库更新之前使用切片
-        time_prompt = f"现在的时间是{current_time}，农历{current_lunar_date}。"
-        prompts += time_prompt
+        prompts += _time_prompt.format(
+            date_time=(current_time := DateTime.now()).strftime(
+                "%Y年%m月%d日 %H:%M:%S"
+            ),
+            weekday_name=_weekdays[current_time.weekday()],
+            lunar_date=current_time.chinesize.date_hanzify(
+                "农历{干支年}{生肖}年{月份}月{数序日}"
+            ),
+        )
     marsho_prompt = config.marshoai_prompt
     spell = SystemMessage(content=marsho_prompt+prompts).as_dict()
     return spell
